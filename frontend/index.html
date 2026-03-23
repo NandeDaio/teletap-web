@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoloTap | Dashboard Bot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode">
+    <div id="app">
+        <!-- LOGIN SCREEN -->
+        <div v-if="!user" class="login-container glass">
+            <div class="logo">
+                <i data-lucide="zap" class="logo-icon"></i>
+                <span>SoloTap</span>
+            </div>
+            <p>Tu bot, 24/7 sin interrupciones.</p>
+            
+            <form @submit.prevent="login" class="login-form">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" v-model="email" placeholder="tucorreo@ejemplo.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" v-model="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary">Entrar al Panel</button>
+            </form>
+            <div class="login-footer">
+                <p>¿No tienes cuenta? <a href="#">Registrarse</a></p>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div v-else class="dashboard-container">
+            <!-- Sidebar -->
+            <aside class="sidebar glass">
+                <div class="sidebar-logo">
+                    <i data-lucide="zap"></i>
+                    <h2>SoloTap</h2>
+                </div>
+                <nav>
+                    <a href="#" @click.prevent="currentView = 'dashboard'" :class="{active: currentView === 'dashboard'}"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                    <a href="#" @click.prevent="currentView = 'subscription'" :class="{active: currentView === 'subscription'}"><i data-lucide="credit-card"></i> Suscripción</a>
+                    <a href="#" @click.prevent="currentView = 'settings'" :class="{active: currentView === 'settings'}"><i data-lucide="settings"></i> Ajustes</a>
+                </nav>
+                <div class="sidebar-footer">
+                    <button @click="user = null" class="btn-outline">
+                        <i data-lucide="log-out"></i> Salir
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content: Dashboard -->
+            <main v-if="currentView === 'dashboard'" class="content">
+                <header class="top-bar">
+                    <div class="welcome">
+                        <h1>Hola, <span>{{ user.email }}</span></h1>
+                        <div class="user-info">
+                            <p>Tus bots están bajo control.</p>
+                            <span v-if="user.sub_chainer && user.sub_roller" class="plan-badge-header">Plan: Pack Completo</span>
+                            <span v-else-if="user.sub_chainer" class="plan-badge-header">Plan: Chainer Pro</span>
+                            <span v-else-if="user.sub_roller" class="plan-badge-header">Plan: Roller Pro</span>
+                            <span v-else class="plan-badge-header">Plan: Gratuito</span>
+                        </div>
+                    </div>
+                    <div class="status-indicators">
+                        <div class="indicator" :class="{ running: user.chainer_running }">Chainers: {{ user.chainer_running ? 'Activo' : 'Offline' }}</div>
+                        <div class="indicator" :class="{ running: user.roller_running }">RollerTap: {{ user.roller_running ? 'Activo' : 'Offline' }}</div>
+                    </div>
+                </header>
+
+                <div class="grid">
+                    <!-- BOT CHARD: CHAINERS -->
+                    <div class="card bot-card glass">
+                        <div class="card-header">
+                            <div class="bot-header">
+                                <h3>Chainer<span>Bot</span></h3>
+                                <div class="bot-status-container">
+                                    <span v-if="!user.sub_chainer" class="badge-locked">Bloqueado</span>
+                                    <span v-else class="indicator" :class="{ 'resting': isResting('chainer') }">{{ getStatusText('chainer') }}</span>
+                                    <span class="level-badge">Nivel {{ user.chainer_level || 1 }}</span>
+                                </div>
+                            </div>
+                        </div> <!-- CIERRE CORRECTO DE CARD-HEADER -->
+                        
+                        <div v-if="user.sub_chainer" class="bot-view">
+                            <!-- STATS GRID 2x2 -->
+                            <div class="bot-stats-grid">
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="zap" class="logo-icon-small"></i> Energía</div>
+                                    <div class="value">{{ formatLargeNumber(user.chainer_energy || 0) }}<span> / {{ formatLargeNumber(user.chainer_max_energy || '-') }}</span></div>
+                                </div>
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="coins" class="logo-icon-small"></i> Balance</div>
+                                    <div class="value">{{ formatLargeNumber(user.chainer_balance || 0) }}</div>
+                                </div>
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="heart" class="logo-icon-small"></i> HP Boss</div>
+                                    <div class="value">{{ formatLargeNumber(user.chainer_boss_hp || 0) }}</div>
+                                </div>
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="clock" class="logo-icon-small"></i> RECARGA ({{ user.chainer_recharges || 0 }})</div>
+                                    <div class="value" :class="{ 'warning': user.chainer_recharges == 0 && !user.chainer_recharge_seconds }">
+                                        {{ getRechargeStatus('chainer') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="token-config">
+                                <label>
+                                    Token Bearer: 
+                                    <div class="tooltip-container">
+                                        <i data-lucide="help-circle" class="help-icon" style="width: 14px; height: 14px; opacity: 0.6; cursor: help; vertical-align: middle; margin-top: -3px;"></i>
+                                        <div class="tooltip-content">
+                                            1. Abre el juego en tu navegador.<br>
+                                            2. Presiona F12 (Inspeccionar).<br>
+                                            3. Ve a la pestaña 'Red' (Network).<br>
+                                            4. Realiza una acción en el juego.<br>
+                                            5. Busca una petición y en 'Headers' busca 'Authorization'.<br>
+                                            6. Copia TODO el texto (incluyendo 'Bearer').
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="copy-input">
+                                    <input type="text" v-model="user.token_chainer" placeholder="Bearer eyJhbGci...">
+                                    <button @click="updateToken('chainer')" class="btn-copy">GUARDAR</button>
+                                </div>
+                            </div>
+
+                            <button @click="toggleBot('chainer')" :class="user.chainer_running ? 'btn-danger' : 'btn-chainer'">
+                                {{ user.chainer_running ? 'DETENER BOT' : 'ENCENDER BOT' }}
+                            </button>
+
+                            <div class="bot-footer">
+                                <div class="logs-container">
+                                    <div v-for="log in (user.chainer_logs ? user.chainer_logs.slice(-5) : [])" :key="log" class="log-entry">
+                                        {{ log }}
+                                    </div>
+                                    <div v-if="!user.chainer_logs || user.chainer_logs.length === 0" class="log-placeholder">
+                                        Esperando Token...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="locked-content">
+                            <p>Desbloquea este bot por <strong>$5.00/mes</strong></p>
+                            <button @click="buySub('chainer')" class="btn-accent">ADQUIRIR AHORA</button>
+                        </div>
+                    </div>
+
+                    <!-- BOT CHARD: ROLLER -->
+                    <div class="card bot-card glass">
+                        <div class="card-header">
+                            <div class="bot-header">
+                                <h3>Roller<span>Bot</span></h3>
+                                <div class="bot-status-container">
+                                    <span v-if="!user.sub_roller" class="badge-locked">Bloqueado</span>
+                                    <span v-else class="indicator" :class="{ 'resting': isResting('roller') }">{{ getStatusText('roller') }}</span>
+                                    <span v-if="user.sub_roller" class="level-badge">Nivel {{ user.roller_level || 1 }}</span>
+                                </div>
+                            </div>
+                        </div> <!-- CIERRE CORRECTO DE CARD-HEADER -->
+                        
+                        <div v-if="user.sub_roller" class="bot-view">
+                            <!-- STATS GRID 2x2 -->
+                            <div class="bot-stats-grid">
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="zap" class="logo-icon-small"></i> Energía</div>
+                                    <div class="value">{{ formatLargeNumber(user.roller_energy || 0) }}<span> / {{ formatLargeNumber(user.roller_max_energy || '-') }}</span></div>
+                                </div>
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="coins" class="logo-icon-small"></i> Balance</div>
+                                    <div class="value">{{ formatLargeNumber(user.roller_balance || 0) }}</div>
+                                </div>
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="trending-up" class="logo-icon-small"></i> Próx. Nivel</div>
+                                    <div class="value">{{ formatLargeNumber(user.roller_balance || 0) }}<span> / {{ formatLargeNumber(user.roller_level_required || '-') }}</span></div>
+                                </div>
+                                <div class="mini-stat-card">
+                                    <div class="label"><i data-lucide="clock" class="logo-icon-small"></i> RECARGA ({{ user.roller_recharges || 0 }})</div>
+                                    <div class="value" :class="{ 'warning': user.roller_recharges == 0 && !user.roller_recharge_seconds }">
+                                        {{ getRechargeStatus('roller') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="token-config">
+                                <label>
+                                    Token Bearer: 
+                                    <div class="tooltip-container">
+                                        <i data-lucide="help-circle" class="help-icon" style="width: 14px; height: 14px; opacity: 0.6; cursor: help; vertical-align: middle; margin-top: -3px;"></i>
+                                        <div class="tooltip-content">
+                                            1. Abre el juego (RollerTap).<br>
+                                            2. Presiona F12 (Inspeccionar).<br>
+                                            3. Ve a la pestaña 'Red'.<br>
+                                            4. Busca peticiones a 'tapp.rlr.app'.<br>
+                                            5. En 'Request Headers' busca 'Authorization'.<br>
+                                            6. Copia el valor (Bearer eyJ...).
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="copy-input">
+                                    <input type="text" v-model="user.token_roller" placeholder="Bearer eyJhbGci...">
+                                    <button @click="updateToken('roller')" class="btn-copy">GUARDAR</button>
+                                </div>
+                            </div>
+
+                            <button @click="toggleBot('roller')" :class="user.roller_running ? 'btn-danger' : 'btn-roller'">
+                                {{ user.roller_running ? 'DETENER BOT' : 'ENCENDER BOT' }}
+                            </button>
+
+                            <div class="bot-footer">
+                                <div class="logs-container">
+                                    <div v-for="log in (user.roller_logs ? user.roller_logs.slice(-5) : [])" :key="log" class="log-entry">
+                                        {{ log }}
+                                    </div>
+                                    <div v-if="!user.roller_logs || user.roller_logs.length === 0" class="log-placeholder">
+                                        Esperando Token Roller...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="locked-content">
+                            <p>Desbloquea este bot por <strong>$5.00/mes</strong></p>
+                            <button @click="buySub('roller')" class="btn-accent">ADQUIRIR AHORA</button>
+                        </div>
+                    </div>
+
+                    <!-- BUNDLE PROMO -->
+                    <div v-if="!user.sub_chainer || !user.sub_roller" class="card promo-card glass">
+                        <h3>¿Quieres ambos bots?</h3>
+                        <p>Ahorra dinero con el <strong>Pack Completo</strong> por solo <span>$7.00/mes</span>.</p>
+                        <div class="promo-actions">
+                            <button @click="buySub('both')" class="btn-primary">PAGAR CON TARJETA</button>
+                            <button @click="openCryptoModal('both')" class="btn-secondary">PAGAR CON CRYPTO</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Main Content: Subscription -->
+            <main v-if="currentView === 'subscription'" class="content">
+                <header class="top-bar">
+                    <div class="welcome">
+                        <h1>Planes de <span>Suscripción</span></h1>
+                        <p>Elige el plan que mejor se adapte a tus necesidades.</p>
+                    </div>
+                </header>
+
+                <div class="grid subscription-cards">
+                    <!-- PLAN CHAINERS -->
+                    <div class="card pricing-card glass" :class="{ current: user.sub_chainer && !user.sub_roller }">
+                        <div class="pricing-header">
+                            <h3>Chainer Pro</h3>
+                            <div class="price">$5.00<span>/mes</span></div>
+                        </div>
+                        <ul class="features">
+                            <li><i data-lucide="check"></i> Bot Chainer 24/7</li>
+                            <li><i data-lucide="check"></i> Modo Turbo automático</li>
+                            <li><i data-lucide="check"></i> Soporte Prioritario</li>
+                        </ul>
+                        <button v-if="!user.sub_chainer" @click="buySub('chainer')" class="btn-primary">Suscribirse</button>
+                        <button v-else class="btn-disabled" disabled>Plan Actual</button>
+                    </div>
+
+                    <!-- PLAN ROLLER -->
+                    <div class="card pricing-card glass" :class="{ current: user.sub_roller && !user.sub_chainer }">
+                        <div class="pricing-header">
+                            <h3>Roller Pro</h3>
+                            <div class="price">$5.00<span>/mes</span></div>
+                        </div>
+                        <ul class="features">
+                            <li><i data-lucide="check"></i> Bot Roller 24/7</li>
+                            <li><i data-lucide="check"></i> Modo Turbo automático</li>
+                            <li><i data-lucide="check"></i> Soporte Prioritario</li>
+                        </ul>
+                        <button v-if="!user.sub_roller" @click="buySub('roller')" class="btn-primary">Suscribirse</button>
+                        <button v-else class="btn-disabled" disabled>Plan Actual</button>
+                    </div>
+
+                    <!-- PLAN PRO (BOTH) -->
+                    <div class="card pricing-card glass featured" :class="{ current: user.sub_chainer && user.sub_roller }">
+                        <div class="pricing-header">
+                            <span class="save-badge">Ahorra $3.00</span>
+                            <h3>Pack Completo</h3>
+                            <div class="price">$7.00<span>/mes</span></div>
+                        </div>
+                        <ul class="features">
+                            <li><i data-lucide="check"></i> <strong>Ambos Bots</strong> (Chainer + Roller)</li>
+                            <li><i data-lucide="check"></i> Máxima velocidad</li>
+                            <li><i data-lucide="check"></i> Acceso a futuros bots</li>
+                        </ul>
+                        <button v-if="!user.sub_chainer || !user.sub_roller" @click="buySub('both')" class="btn-primary">Adquirir Pack</button>
+                        <button v-else class="btn-disabled" disabled>Plan Actual</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Main Content: Settings -->
+            <main v-if="currentView === 'settings'" class="content">
+                <header class="top-bar">
+                    <div class="welcome">
+                        <h1>Panel de <span>Ajustes</span></h1>
+                        <p>Configura tu cuenta y preferencias del sistema.</p>
+                    </div>
+                </header>
+
+                <div class="grid settings-grid">
+                    <!-- CHANGE PASSWORD -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h3>Seguridad de la Cuenta</h3>
+                        </div>
+                        <form @submit.prevent="alert('Contraseña actualizada (Simulación)')">
+                            <div class="input-group">
+                                <label>Nueva Contraseña</label>
+                                <input type="password" placeholder="••••••••">
+                            </div>
+                            <div class="input-group">
+                                <label>Confirmar Contraseña</label>
+                                <input type="password" placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn-primary">Actualizar Contraseña</button>
+                        </form>
+                    </div>
+
+                    <!-- NOTIFICATIONS/SYSTEM -->
+                    <div class="card glass">
+                        <div class="card-header">
+                            <h3>Preferencias del Bot</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div class="setting-info" style="display:flex; flex-direction:column;">
+                                    <span class="title">Modo Silencioso</span>
+                                    <span class="desc" style="font-size:0.7rem; color:var(--text-muted)">No mostrar logs en tiempo real.</span>
+                                </div>
+                                <input type="checkbox" style="width:20px; height:20px;">
+                            </div>
+                            <div class="setting-item" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                                <div class="setting-info" style="display:flex; flex-direction:column;">
+                                    <span class="title">Turbo Global</span>
+                                    <span class="desc" style="font-size:0.7rem; color:var(--text-muted)">Forzar modo turbo en todos los bots.</span>
+                                </div>
+                                <input type="checkbox" checked style="width:20px; height:20px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- CRYPTO MODAL -->
+            <div v-if="showCryptoModal" class="modal-overlay">
+                <div class="modal glass">
+                    <div class="modal-header">
+                        <h2>Pago Seguro USDT (TRC20)</h2>
+                        <button @click="showCryptoModal = false" class="btn-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="plan-info-badge">
+                            Plan: <strong>{{ selectedPlanName }}</strong> - Monto: <strong>${{ selectedAmount }}.00</strong>
+                        </div>
+
+                        <!-- QR CODE SECTION -->
+                        <div class="qr-container">
+                            <img :src="qrImageUrl" alt="QR de Pago" class="qr-code">
+                            <p class="qr-hint">Escanea para pagar exactamente <strong>{{ selectedAmount }}.00 USDT</strong></p>
+                        </div>
+
+                        <div class="crypto-options">
+                            <div class="crypto-addr">
+                                <label>Dirección TRC20 (Red TRON)</label>
+                                <div class="copy-input">
+                                    <input type="text" value="TU_BILLETERA_TRC20_AQUÍ" id="walletAddr" readonly>
+                                    <button @click="copyWallet" class="btn-copy">COPIAR</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <i data-lucide="alert-triangle"></i>
+                            <p><strong>ATENCIÓN:</strong> Envía únicamente la red <strong>TRC20</strong>. Si envías un monto distinto a <span>${{ selectedAmount }}.00</span>, el sistema no validará la compra y perderás tus fondos.</p>
+                        </div>
+
+                        <div class="crypto-verify">
+                            <label>Hash de Transacción (TXID)</label>
+                            <input type="text" v-model="txid" placeholder="f43a...0b21">
+                            <button @click="verifyCrypto" class="btn-primary">CONFIRMAR ENVÍO</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue.js para simplificar reactividad sin build tools -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

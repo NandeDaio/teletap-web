@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: teletap-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend main:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: PORT
+        value: 10000

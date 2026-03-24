@@ -106,7 +106,7 @@
                                 </div>
                                 <div class="mini-stat-card">
                                     <div class="label"><i data-lucide="clock" class="logo-icon-small"></i> RECARGA ({{ user.chainer_recharges || 0 }})</div>
-                                    <div class="value" :class="{ 'warning': user.chainer_recharges == 0 && !user.chainer_recharge_seconds }">
+                                    <div class="value" :class="{ 'warning': isRechargeWarning('chainer') }">
                                         {{ getRechargeStatus('chainer') }}
                                     </div>
                                 </div>
@@ -184,7 +184,7 @@
                                 </div>
                                 <div class="mini-stat-card">
                                     <div class="label"><i data-lucide="clock" class="logo-icon-small"></i> RECARGA ({{ user.roller_recharges || 0 }})</div>
-                                    <div class="value" :class="{ 'warning': user.roller_recharges == 0 && !user.roller_recharge_seconds }">
+                                    <div class="value" :class="{ 'warning': isRechargeWarning('roller') }">
                                         {{ getRechargeStatus('roller') }}
                                     </div>
                                 </div>

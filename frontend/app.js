@@ -97,13 +97,27 @@ createApp({
             const token = bot === 'chainer' ? this.user.token_chainer : this.user.token_roller;
             
             if (!token) return '-';
-            if (recharges > 0) return 'Recarga Lista!';
-            
-            if (rechargeAt && (rechargeAt * 1000) > Date.now()) {
-                const diff = Math.ceil((rechargeAt * 1000 - Date.now()) / 1000);
+
+            const now = Date.now();
+            // Priorizar el tiempo restante si existe una fecha de próxima recarga en el futuro
+            if (rechargeAt && (rechargeAt * 1000) > now) {
+                const diff = Math.ceil((rechargeAt * 1000 - now) / 1000);
                 return this.formatTime(diff);
             }
-            return 'Recarga Lista!';
+            
+            if (recharges > 0) return 'Recarga Lista!';
+            
+            return (recharges === 0) ? 'Agotado' : 'Recarga Lista!';
+        },
+        isRechargeWarning(bot) {
+            const recharges = bot === 'chainer' ? this.user.chainer_recharges : this.user.roller_recharges;
+            const rechargeAt = bot === 'chainer' ? this.user.chainer_recharge_at : this.user.roller_recharge_at;
+            
+            const now = Date.now();
+            // Mostrar en amarillo (warning) si está en cooldown o si no hay recargas
+            if (rechargeAt && (rechargeAt * 1000) > now) return true;
+            if (recharges === 0) return true;
+            return false;
         },
         isResting(bot) {
             const restUntil = bot === 'chainer' ? this.user.chainer_rest_until : this.user.roller_rest_until;

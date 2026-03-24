@@ -621,9 +621,16 @@ def resume_active_bots():
     except Exception as e:
         print(f"❌ Error al reanudar bots: {e}")
 
-if __name__ == "__main__":
-    # Iniciar la reanudación de bots en un hilo aparte para no bloquear el arranque
+    pass
+
+# Iniciar la reanudación de bots en un hilo aparte para no bloquear el arranque
+# Ejecutamos esto fuera de __main__ para que funcione con Gunicorn en Render
+try:
     threading.Thread(target=resume_active_bots, daemon=True).start()
+except Exception as e:
+    print(f"⚠️ Error al iniciar hilo de reanudación: {e}")
+
+if __name__ == "__main__":
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

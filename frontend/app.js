@@ -95,7 +95,7 @@ createApp({
             const recharges = bot === 'chainer' ? this.user.chainer_recharges : this.user.roller_recharges;
             const rechargeAt = bot === 'chainer' ? this.user.chainer_recharge_at : this.user.roller_recharge_at;
             const token = bot === 'chainer' ? this.user.token_chainer : this.user.token_roller;
-            
+
             if (!token) return '-';
 
             const now = Date.now();
@@ -104,15 +104,13 @@ createApp({
                 const diff = Math.ceil((rechargeAt * 1000 - now) / 1000);
                 return this.formatTime(diff);
             }
-            
-            if (recharges > 0) return 'Recarga Lista!';
-            
-            return (recharges === 0) ? 'Agotado' : 'Recarga Lista!';
+
+            return 'Recarga Lista!';
         },
         isRechargeWarning(bot) {
             const recharges = bot === 'chainer' ? this.user.chainer_recharges : this.user.roller_recharges;
             const rechargeAt = bot === 'chainer' ? this.user.chainer_recharge_at : this.user.roller_recharge_at;
-            
+
             const now = Date.now();
             // Mostrar en amarillo (warning) si está en cooldown o si no hay recargas
             if (rechargeAt && (rechargeAt * 1000) > now) return true;

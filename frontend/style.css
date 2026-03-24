@@ -13,6 +13,17 @@
   --primary-glow: rgba(99, 102, 241, 0.4);
 }
 
+.uptime-text {
+  font-size: 0.65em;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 10px;
+  background: rgba(0,0,0,0.2);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-glass);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

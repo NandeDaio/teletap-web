@@ -80,7 +80,7 @@
                     <div class="card bot-card glass">
                         <div class="card-header">
                             <div class="bot-header">
-                                <h3>Chainer<span>Bot</span></h3>
+                                <h3>Chainer<span>Bot</span><span v-if="user.chainer_running" class="uptime-text">{{ getUptime('chainer') }}</span></h3>
                                 <div class="bot-status-container">
                                     <span v-if="!user.sub_chainer" class="badge-locked">Bloqueado</span>
                                     <span v-else class="indicator" :class="{ 'resting': isResting('chainer') }">{{ getStatusText('chainer') }}</span>
@@ -158,7 +158,7 @@
                     <div class="card bot-card glass">
                         <div class="card-header">
                             <div class="bot-header">
-                                <h3>Roller<span>Bot</span></h3>
+                                <h3>Roller<span>Bot</span><span v-if="user.roller_running" class="uptime-text">{{ getUptime('roller') }}</span></h3>
                                 <div class="bot-status-container">
                                     <span v-if="!user.sub_roller" class="badge-locked">Bloqueado</span>
                                     <span v-else class="indicator" :class="{ 'resting': isResting('roller') }">{{ getStatusText('roller') }}</span>

@@ -180,7 +180,7 @@ def chainer_sync_loop(email, headers, profile_url, balance_url):
                         source.get("energyRechargeCount") or source.get("rechargeEnergyCount") or source.get("recharges") or 
                         source.get("dailyRechargeCount") or p_data.get("userData", {}).get("energyRechargeCount") or 0
                     ),
-                    "chainer_recharge_seconds": int(parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeEnergyAt") or source.get("rechargeAt"))),
+                    "chainer_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeEnergyAt") or source.get("rechargeAt"))),
                     "chainer_level": (lambda val: int(str(val).replace("level", "")) if val else 1)(
                                         source.get("profileProgressionsCode") or p_data.get("profileProgressionsCode") or 
                                         p_data.get("userData", {}).get("profileProgressionsCode") or
@@ -307,7 +307,7 @@ def roller_sync_loop(email, headers, profile_url, balance_url):
                     "roller_max_energy": int(val_total),
                     "roller_energy_per_tap": int(source.get("energyPerTap") or 1),
                     "roller_recharges": source.get("energyRechargeCount") or source.get("rechargeEnergyCount") or source.get("recharges") or source.get("dailyRechargeCount") or 0,
-                    "roller_recharge_seconds": parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("energyRechargeDate") or source.get("rechargeAt") or source.get("next_recharge_at")),
+                    "roller_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("energyRechargeDate") or source.get("rechargeAt") or source.get("next_recharge_at"))),
                     "roller_level_progress": source.get("levelProgress", 0)
                 }
                 
@@ -508,12 +508,12 @@ def get_user_status():
             "chainer_energy": user.get("chainer_energy", 0),
             "chainer_max_energy": user.get("chainer_max_energy", "-"),
             "chainer_recharges": user.get("chainer_recharges", 0),
-            "chainer_recharge_seconds": user.get("chainer_recharge_seconds", 0),
+            "chainer_recharge_at": user.get("chainer_recharge_at", 0),
             "roller_balance": user.get("roller_balance", 0),
             "roller_energy": user.get("roller_energy", 0),
             "roller_max_energy": user.get("roller_max_energy", "-"),
             "roller_recharges": user.get("roller_recharges", 0),
-            "roller_recharge_seconds": user.get("roller_recharge_seconds", 0),
+            "roller_recharge_at": user.get("roller_recharge_at", 0),
             "roller_level_progress": user.get("roller_level_progress", 0),
             "roller_level_required": user.get("roller_level_required", "-"),
             "sub_chainer": user.get("sub_chainer"),

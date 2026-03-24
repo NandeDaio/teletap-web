@@ -93,13 +93,16 @@ createApp({
         },
         getRechargeStatus(bot) {
             const recharges = bot === 'chainer' ? this.user.chainer_recharges : this.user.roller_recharges;
-            const seconds = bot === 'chainer' ? this.user.chainer_recharge_seconds : this.user.roller_recharge_seconds;
-
+            const rechargeAt = bot === 'chainer' ? this.user.chainer_recharge_at : this.user.roller_recharge_at;
             const token = bot === 'chainer' ? this.user.token_chainer : this.user.token_roller;
+            
             if (!token) return '-';
-
             if (recharges > 0) return 'Recarga Lista!';
-            if (seconds > 0) return this.formatTime(seconds);
+            
+            if (rechargeAt && (rechargeAt * 1000) > Date.now()) {
+                const diff = Math.ceil((rechargeAt * 1000 - Date.now()) / 1000);
+                return this.formatTime(diff);
+            }
             return 'Recarga Lista!';
         },
         isResting(bot) {

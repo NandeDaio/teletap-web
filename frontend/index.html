@@ -138,13 +138,13 @@
                             </button>
 
                             <div class="bot-footer">
-                                <div class="logs-container">
-                                    <div v-for="log in (user.chainer_logs ? user.chainer_logs.slice(-5) : [])" :key="log" class="log-entry">
+                                <transition-group name="log-list" tag="div" class="logs-container">
+                                    <div v-for="log in (user.chainer_logs ? [...user.chainer_logs].reverse().slice(0, 20) : [])" :key="log" class="log-entry">
                                         {{ log }}
                                     </div>
-                                    <div v-if="!user.chainer_logs || user.chainer_logs.length === 0" class="log-placeholder">
-                                        Esperando Token...
-                                    </div>
+                                </transition-group>
+                                <div v-if="!user.chainer_logs || user.chainer_logs.length === 0" class="log-placeholder">
+                                    Esperando Token...
                                 </div>
                             </div>
                         </div>
@@ -216,13 +216,13 @@
                             </button>
 
                             <div class="bot-footer">
-                                <div class="logs-container">
-                                    <div v-for="log in (user.roller_logs ? user.roller_logs.slice(-5) : [])" :key="log" class="log-entry">
+                                <transition-group name="log-list" tag="div" class="logs-container">
+                                    <div v-for="log in (user.roller_logs ? [...user.roller_logs].reverse().slice(0, 20) : [])" :key="log" class="log-entry">
                                         {{ log }}
                                     </div>
-                                    <div v-if="!user.roller_logs || user.roller_logs.length === 0" class="log-placeholder">
-                                        Esperando Token Roller...
-                                    </div>
+                                </transition-group>
+                                <div v-if="!user.roller_logs || user.roller_logs.length === 0" class="log-placeholder">
+                                    Esperando Token Roller...
                                 </div>
                             </div>
                         </div>

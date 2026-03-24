@@ -214,18 +214,29 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             curr_energy = int(user.get("chainer_energy", 0))
             total_energy = int(user.get("chainer_max_energy", 0))
             energy_per_tap = int(user.get("chainer_energy_per_tap", 1))
-            recharge_ready = int(user.get("chainer_recharges", 0)) > 0 or int(user.get("chainer_recharge_seconds", 999)) <= 0
+            recharge_at = user.get("chainer_recharge_at", 0)
+            recharge_ready = int(user.get("chainer_recharges", 0)) > 0 or (recharge_at > 0 and time.time() >= recharge_at)
             rest_until = float(user.get("chainer_rest_until", 0))
 
             if time.time() < rest_until:
                 time.sleep(5); continue
 
+            # Verificar si energía está baja
             if curr_energy < 20:
+                # PRIORIDAD: Antes de descansar, verificar si hay recarga disponible (Sincronizar para estar seguros)
+                user = sync_from_db(email)
+                recharges = int(user.get("chainer_recharges", 0))
+                recharge_at = int(user.get("chainer_recharge_at", 0))
+                recharge_ready = recharges > 0 or (recharge_at > 0 and time.time() >= recharge_at)
+
                 if recharge_ready:
-                    log_message(email, "chainer", "⚡ Auto-Recarga activada (Energía baja).")
-                    requests.post(recharge_url, json={}, headers=headers, timeout=10)
+                    log_message(email, "chainer", "⚡ Recarga disponible. Priorizando antes de descansar.")
+                    if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
+                        user["chainer_recharges_done"] = user.get("chainer_recharges_done", 0) + 1
+                        save_to_db(email, {"chainer_recharges_done": user["chainer_recharges_done"]})
                     time.sleep(2); continue
                 
+                # Si no hay recargos, ahora sí descansar
                 if time.time() > rest_until:
                     target_rest = time.time() + 600
                     save_to_db(email, {"chainer_rest_until": target_rest})
@@ -235,7 +246,9 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             
             if curr_energy < 100 and recharge_ready:
                 log_message(email, "chainer", "⚡ Auto-Recarga activada.")
-                requests.post(recharge_url, json={}, headers=headers, timeout=10)
+                if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
+                    user["chainer_recharges_done"] = user.get("chainer_recharges_done", 0) + 1
+                    save_to_db(email, {"chainer_recharges_done": user["chainer_recharges_done"]})
                 time.sleep(2); continue
 
             # 2. Taps asíncronos
@@ -342,16 +355,25 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
             curr_energy = int(user.get("roller_energy", 0))
             total_energy = int(user.get("roller_max_energy", 0))
             energy_per_tap = int(user.get("roller_energy_per_tap", 1))
-            recharge_ready = int(user.get("roller_recharges", 0)) > 0 or int(user.get("roller_recharge_seconds", 999)) <= 0
+            recharge_at = user.get("roller_recharge_at", 0)
+            recharge_ready = int(user.get("roller_recharges", 0)) > 0 or (recharge_at > 0 and time.time() >= recharge_at)
             rest_until = float(user.get("roller_rest_until", 0))
 
             if time.time() < rest_until:
                 time.sleep(5); continue
 
             if curr_energy < 20:
+                # PRIORIDAD: Antes de descansar, verificar si hay recarga disponible
+                user = sync_from_db(email)
+                recharges = int(user.get("roller_recharges", 0))
+                recharge_at = int(user.get("roller_recharge_at", 0))
+                recharge_ready = recharges > 0 or (recharge_at > 0 and time.time() >= recharge_at)
+
                 if recharge_ready:
-                    log_message(email, "roller", "⚡ Auto-Recarga activada (Energía baja).")
-                    requests.post(recharge_url, json={}, headers=headers, timeout=10)
+                    log_message(email, "roller", "⚡ Recarga disponible. Priorizando antes de descansar.")
+                    if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
+                        user["roller_recharges_done"] = user.get("roller_recharges_done", 0) + 1
+                        save_to_db(email, {"roller_recharges_done": user["roller_recharges_done"]})
                     time.sleep(2); continue
                 
                 if time.time() > rest_until:
@@ -507,12 +529,12 @@ def get_user_status():
             "chainer_balance": user.get("chainer_balance", 0),
             "chainer_energy": user.get("chainer_energy", 0),
             "chainer_max_energy": user.get("chainer_max_energy", "-"),
-            "chainer_recharges": user.get("chainer_recharges", 0),
+            "chainer_recharges": user.get("chainer_recharges_done", 0),
             "chainer_recharge_at": user.get("chainer_recharge_at", 0),
             "roller_balance": user.get("roller_balance", 0),
             "roller_energy": user.get("roller_energy", 0),
             "roller_max_energy": user.get("roller_max_energy", "-"),
-            "roller_recharges": user.get("roller_recharges", 0),
+            "roller_recharges": user.get("roller_recharges_done", 0),
             "roller_recharge_at": user.get("roller_recharge_at", 0),
             "roller_level_progress": user.get("roller_level_progress", 0),
             "roller_level_required": user.get("roller_level_required", "-"),

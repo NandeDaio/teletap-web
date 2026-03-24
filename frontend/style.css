@@ -500,6 +500,20 @@ body {
     border: 1px solid var(--border-glass);
     height: 120px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+
+/* Custom Scrollbar */
+.bot-footer::-webkit-scrollbar {
+    width: 4px;
+}
+.bot-footer::-webkit-scrollbar-track {
+    background: transparent;
+}
+.bot-footer::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 10px;
 }
 
 .logs-container {
@@ -515,6 +529,23 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: all 0.3s ease;
+}
+
+/* Highlight the latest log */
+.log-entry:first-child {
+    border-left-color: var(--accent);
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+/* Log Transitions */
+.log-list-enter-active {
+  transition: all 0.4s ease-out;
+}
+.log-list-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .log-placeholder {

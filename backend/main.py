@@ -174,12 +174,7 @@ def chainer_sync_loop(email, headers, profile_url, balance_url):
                     "chainer_energy": int(source.get("activeEnergyCount") or 0),
                     "chainer_max_energy": int(val_total),
                     "chainer_energy_per_tap": int(source.get("energyPerTap") or 1),
-                    "chainer_recharges": int(
-                        (source.get("totalEnergyRechargeCount", 6) - (source.get("energyRechargeCount") or 0)) if "energyRechargeCount" in source else
-                        (source.get("dailyEnergyRechargeLimit", 6) - (source.get("dailyEnergyRechargeUsed") or 0)) if "dailyEnergyRechargeUsed" in source else
-                        source.get("energyRechargeCount") or source.get("rechargeEnergyCount") or source.get("recharges") or 
-                        source.get("dailyRechargeCount") or p_data.get("userData", {}).get("energyRechargeCount") or 0
-                    ),
+                    # chainer_recharges se maneja internamente por sesión ahora
                     "chainer_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeEnergyAt") or source.get("rechargeAt"))),
                     "chainer_level": (lambda val: int(str(val).replace("level", "")) if val else 1)(
                                         source.get("profileProgressionsCode") or p_data.get("profileProgressionsCode") or 
@@ -187,7 +182,8 @@ def chainer_sync_loop(email, headers, profile_url, balance_url):
                                         p_data.get("playerLevel") or p_data.get("userData", {}).get("playerLevel") or 
                                         source.get("playerLevel") or p_data.get("level") or source.get("level")
                                     ),
-                    "chainer_boss_hp": calculate_boss_hp(source)
+                    "chainer_boss_hp": calculate_boss_hp(source),
+                    "chainer_rest_until": int(local_cache.get(email, {}).get("chainer_rest_until", 0))
                 }
                 save_to_db(email, update_data)
 
@@ -225,20 +221,20 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             if curr_energy < 20:
                 # PRIORIDAD: Antes de descansar, verificar si hay recarga disponible (Sincronizar para estar seguros)
                 user = sync_from_db(email)
-                recharges = int(user.get("chainer_recharges", 0))
                 recharge_at = int(user.get("chainer_recharge_at", 0))
-                recharge_ready = recharges > 0 or (recharge_at > 0 and time.time() >= recharge_at)
+                # Ya no usamos recharges > 0 (boosts) porque el usuario dice que no existen o fallan
+                recharge_ready = (recharge_at > 0 and time.time() >= recharge_at)
 
                 if recharge_ready:
                     log_message(email, "chainer", "⚡ Recarga disponible. Priorizando antes de descansar.")
                     if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
-                        user["chainer_recharges_done"] = user.get("chainer_recharges_done", 0) + 1
-                        save_to_db(email, {"chainer_recharges_done": user["chainer_recharges_done"]})
+                        new_count = int(user.get("chainer_recharges", 0)) + 1
+                        save_to_db(email, {"chainer_recharges": new_count})
                     time.sleep(2); continue
                 
                 # Si no hay recargos, ahora sí descansar
                 if time.time() > rest_until:
-                    target_rest = time.time() + 600
+                    target_rest = int(time.time() + 600)
                     save_to_db(email, {"chainer_rest_until": target_rest})
                     log_message(email, "chainer", "💤 Energía baja. Descansando 10 min...")
                     time.sleep(5); continue
@@ -247,8 +243,8 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             if curr_energy < 100 and recharge_ready:
                 log_message(email, "chainer", "⚡ Auto-Recarga activada.")
                 if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
-                    user["chainer_recharges_done"] = user.get("chainer_recharges_done", 0) + 1
-                    save_to_db(email, {"chainer_recharges_done": user["chainer_recharges_done"]})
+                    new_count = int(user.get("chainer_recharges", 0)) + 1
+                    save_to_db(email, {"chainer_recharges": new_count})
                 time.sleep(2); continue
 
             # 2. Taps asíncronos
@@ -319,9 +315,10 @@ def roller_sync_loop(email, headers, profile_url, balance_url):
                     "roller_energy": int(source.get("activeEnergyCount") or 0),
                     "roller_max_energy": int(val_total),
                     "roller_energy_per_tap": int(source.get("energyPerTap") or 1),
-                    "roller_recharges": source.get("energyRechargeCount") or source.get("rechargeEnergyCount") or source.get("recharges") or source.get("dailyRechargeCount") or 0,
-                    "roller_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("energyRechargeDate") or source.get("rechargeAt") or source.get("next_recharge_at"))),
-                    "roller_level_progress": source.get("levelProgress", 0)
+                    "roller_recharges": int(local_cache.get(email, {}).get("roller_recharges", 0)), # roller_recharges se maneja internamente por sesión ahora
+                    "roller_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeAt") or source.get("next_recharge_at"))),
+                    "roller_level_progress": source.get("levelProgress", 0),
+                    "roller_rest_until": int(local_cache.get(email, {}).get("roller_rest_until", 0))
                 }
                 
                 # Extraer nivel y HP del boss
@@ -377,7 +374,7 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
                     time.sleep(2); continue
                 
                 if time.time() > rest_until:
-                    target_rest = time.time() + 600
+                    target_rest = int(time.time() + 600)
                     save_to_db(email, {"roller_rest_until": target_rest})
                     log_message(email, "roller", "💤 Energía baja. Descansando 10 min...")
                     time.sleep(5); continue
@@ -494,7 +491,8 @@ def toggle_bot():
     
     update_data = {field: state_to_set}
     if state_to_set:
-        update_data[f"{bot_type}_start_time"] = time.time()
+        update_data[f"{bot_type}_start_time"] = int(time.time())
+        update_data[f"{bot_type}_recharges"] = 0 # Reiniciar contador al encender
         update_data[f"{bot_type}_rest_until"] = 0
         
         token = user[f"token_{bot_type}"]
@@ -623,15 +621,10 @@ def resume_active_bots():
 
     pass
 
-# Iniciar la reanudación de bots en un hilo aparte para no bloquear el arranque
-# Ejecutamos esto fuera de __main__ para que funcione con Gunicorn en Render
-try:
-    threading.Thread(target=resume_active_bots, daemon=True).start()
-except Exception as e:
-    print(f"⚠️ Error al iniciar hilo de reanudación: {e}")
+# Iniciar la reanudación de bots fuera del __main__ para que funcione en Render (Gunicorn)
+threading.Thread(target=resume_active_bots, daemon=True).start()
 
 if __name__ == "__main__":
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-

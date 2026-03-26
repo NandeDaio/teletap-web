@@ -105,7 +105,8 @@ createApp({
                 return this.formatTime(diff);
             }
 
-            return 'Recarga Lista!';
+            if (recharges > 0) return 'Recarga Lista!';
+            return 'Agotado';
         },
         isRechargeWarning(bot) {
             const recharges = bot === 'chainer' ? this.user.chainer_recharges : this.user.roller_recharges;

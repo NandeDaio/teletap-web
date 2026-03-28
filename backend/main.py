@@ -362,15 +362,15 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
             if curr_energy < 20:
                 # PRIORIDAD: Antes de descansar, verificar si hay recarga disponible
                 user = sync_from_db(email)
-                recharges = int(user.get("roller_recharges", 0))
                 recharge_at = int(user.get("roller_recharge_at", 0))
-                recharge_ready = recharges > 0 or (recharge_at > 0 and time.time() >= recharge_at)
+                # Igual que chainer: solo usar timestamp para determinar si hay recarga
+                recharge_ready = (recharge_at > 0 and time.time() >= recharge_at)
 
                 if recharge_ready:
                     log_message(email, "roller", "⚡ Recarga disponible. Priorizando antes de descansar.")
                     if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
-                        user["roller_recharges_done"] = user.get("roller_recharges_done", 0) + 1
-                        save_to_db(email, {"roller_recharges_done": user["roller_recharges_done"]})
+                        new_count = int(user.get("roller_recharges", 0)) + 1
+                        save_to_db(email, {"roller_recharges": new_count})
                     time.sleep(2); continue
                 
                 if time.time() > rest_until:

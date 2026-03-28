@@ -183,7 +183,7 @@
                                     <div class="value">{{ formatLargeNumber(user.roller_balance || 0) }}<span> / {{ formatLargeNumber(user.roller_level_required || '-') }}</span></div>
                                 </div>
                                 <div class="mini-stat-card">
-                                    <div class="label"><i data-lucide="clock" class="logo-icon-small"></i> RECARGA ({{ user.roller_recharges || 0 }})</div>
+                                    <div class="label"><i data-lucide="clock" class="logo-icon-small"></i> RECARGAS ({{ user.roller_recharges || 0 }})</div>
                                     <div class="value" :class="{ 'warning': isRechargeWarning('roller') }">
                                         {{ getRechargeStatus('roller') }}
                                     </div>

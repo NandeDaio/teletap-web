@@ -211,7 +211,7 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             total_energy = int(user.get("chainer_max_energy", 0))
             energy_per_tap = int(user.get("chainer_energy_per_tap", 1))
             recharge_at = user.get("chainer_recharge_at", 0)
-            recharge_ready = int(user.get("chainer_recharges", 0)) > 0 or (recharge_at > 0 and time.time() >= recharge_at)
+            recharge_ready = (recharge_at > 0 and time.time() >= recharge_at)
             rest_until = float(user.get("chainer_rest_until", 0))
 
             if time.time() < rest_until:
@@ -353,7 +353,7 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
             total_energy = int(user.get("roller_max_energy", 0))
             energy_per_tap = int(user.get("roller_energy_per_tap", 1))
             recharge_at = user.get("roller_recharge_at", 0)
-            recharge_ready = int(user.get("roller_recharges", 0)) > 0 or (recharge_at > 0 and time.time() >= recharge_at)
+            recharge_ready = (recharge_at > 0 and time.time() >= recharge_at)
             rest_until = float(user.get("roller_rest_until", 0))
 
             if time.time() < rest_until:

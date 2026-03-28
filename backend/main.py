@@ -211,7 +211,7 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             total_energy = int(user.get("chainer_max_energy", 0))
             energy_per_tap = int(user.get("chainer_energy_per_tap", 1))
             recharge_at = user.get("chainer_recharge_at", 0)
-            recharge_ready = (recharge_at > 0 and time.time() >= recharge_at)
+            recharge_ready = (recharge_at > 0 and time.time() >= (recharge_at + 2))
             rest_until = float(user.get("chainer_rest_until", 0))
 
             if time.time() < rest_until:
@@ -227,10 +227,16 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
 
                 if recharge_ready:
                     log_message(email, "chainer", "⚡ Recarga disponible. Priorizando antes de descansar.")
-                    if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
+                    resp = requests.post(recharge_url, json={}, headers=headers, timeout=10)
+                    if resp.status_code <= 201:
                         new_count = int(user.get("chainer_recharges", 0)) + 1
                         save_to_db(email, {"chainer_recharges": new_count})
-                    time.sleep(2); continue
+                        time.sleep(5) # Pausa breve tras éxito
+                    else:
+                        # Si falla (ej: el juego aún no lo permite), esperar 30s para no spamear
+                        log_message(email, "chainer", "⚠️ Re-intentando recarga en 30s (Sincronización)...")
+                        time.sleep(30)
+                    continue
                 
                 # Si no hay recargos, ahora sí descansar
                 if time.time() > rest_until:
@@ -353,7 +359,7 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
             total_energy = int(user.get("roller_max_energy", 0))
             energy_per_tap = int(user.get("roller_energy_per_tap", 1))
             recharge_at = user.get("roller_recharge_at", 0)
-            recharge_ready = (recharge_at > 0 and time.time() >= recharge_at)
+            recharge_ready = (recharge_at > 0 and time.time() >= (recharge_at + 2))
             rest_until = float(user.get("roller_rest_until", 0))
 
             if time.time() < rest_until:
@@ -368,10 +374,15 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
 
                 if recharge_ready:
                     log_message(email, "roller", "⚡ Recarga disponible. Priorizando antes de descansar.")
-                    if requests.post(recharge_url, json={}, headers=headers, timeout=10).status_code <= 201:
+                    resp = requests.post(recharge_url, json={}, headers=headers, timeout=10)
+                    if resp.status_code <= 201:
                         new_count = int(user.get("roller_recharges", 0)) + 1
                         save_to_db(email, {"roller_recharges": new_count})
-                    time.sleep(2); continue
+                        time.sleep(5)
+                    else:
+                        log_message(email, "roller", "⚠️ Re-intentando recarga en 30s (Sincronización)...")
+                        time.sleep(30)
+                    continue
                 
                 if time.time() > rest_until:
                     target_rest = int(time.time() + 600)

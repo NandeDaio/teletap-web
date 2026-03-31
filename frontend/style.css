@@ -13,6 +13,10 @@
   --primary-glow: rgba(99, 102, 241, 0.4);
 }
 
+[v-cloak] {
+  display: none;
+}
+
 .uptime-text {
   font-size: 0.65em;
   color: var(--text-muted);

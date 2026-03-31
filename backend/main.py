@@ -272,9 +272,14 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
                     
                     log_message(email, "chainer", f"{'🚀 [TURBO]' if is_turbo else '✅'} Taps enviados ({energy_per_tap})")
                 
-                wait = random.uniform(1.5, 3.5)
-                if total_energy > 0 and curr_energy > (total_energy * turbo_threshold_pct): wait *= 0.1
+                click_min = float(user.get("chainer_click_min", 1.5))
+                click_max = float(user.get("chainer_click_max", 3.5))
+                wait = random.uniform(click_min, click_max)
+                if total_energy > 0 and curr_energy > (total_energy * turbo_threshold_pct): 
+                    turbo_factor = float(user.get("chainer_turbo_factor", 0.1))
+                    wait *= turbo_factor
                 time.sleep(wait)
+
 
             else:
                 time.sleep(2)
@@ -413,9 +418,14 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
                     
                     log_message(email, "roller", f"{'🚀 [TURBO]' if is_turbo else '✅'} Taps enviados ({energy_per_tap})")
                 
-                wait = random.uniform(1.5, 3.5)
-                if total_energy > 0 and curr_energy > (total_energy * turbo_threshold_pct): wait *= 0.1
+                click_min = float(user.get("roller_click_min", 1.5))
+                click_max = float(user.get("roller_click_max", 3.5))
+                wait = random.uniform(click_min, click_max)
+                if total_energy > 0 and curr_energy > (total_energy * turbo_threshold_pct): 
+                    turbo_factor = float(user.get("roller_turbo_factor", 0.1))
+                    wait *= turbo_factor
                 time.sleep(wait)
+
 
             else:
                 time.sleep(2)
@@ -476,11 +486,18 @@ def login():
                 "chainer_turbo_threshold": user.get("chainer_turbo_threshold", 30),
                 "chainer_rest_threshold": user.get("chainer_rest_threshold", 20),
                 "chainer_rest_duration": user.get("chainer_rest_duration", 10),
+                "chainer_click_min": user.get("chainer_click_min", 1.5),
+                "chainer_click_max": user.get("chainer_click_max", 3.5),
+                "chainer_turbo_factor": user.get("chainer_turbo_factor", 0.1),
                 "roller_turbo_threshold": user.get("roller_turbo_threshold", 30),
                 "roller_rest_threshold": user.get("roller_rest_threshold", 20),
-                "roller_rest_duration": user.get("roller_rest_duration", 10)
+                "roller_rest_duration": user.get("roller_rest_duration", 10),
+                "roller_click_min": user.get("roller_click_min", 1.5),
+                "roller_click_max": user.get("roller_click_max", 3.5),
+                "roller_turbo_factor": user.get("roller_turbo_factor", 0.1)
             }
         })
+
 
     return jsonify({"success": False, "message": "Credenciales inválidas"}), 401
 
@@ -552,9 +569,12 @@ def update_settings():
     # Lista de campos permitidos para actualizar
     allowed_fields = [
         "chainer_turbo_threshold", "chainer_rest_threshold", "chainer_rest_duration",
+        "chainer_click_min", "chainer_click_max", "chainer_turbo_factor",
         "roller_turbo_threshold", "roller_rest_threshold", "roller_rest_duration",
+        "roller_click_min", "roller_click_max", "roller_turbo_factor",
         "password"
     ]
+
     
     update_data = {}
     for field in allowed_fields:
@@ -605,10 +625,17 @@ def get_user_status():
             "chainer_turbo_threshold": user.get("chainer_turbo_threshold", 30),
             "chainer_rest_threshold": user.get("chainer_rest_threshold", 20),
             "chainer_rest_duration": user.get("chainer_rest_duration", 10),
+            "chainer_click_min": user.get("chainer_click_min", 1.5),
+            "chainer_click_max": user.get("chainer_click_max", 3.5),
+            "chainer_turbo_factor": user.get("chainer_turbo_factor", 0.1),
             "roller_turbo_threshold": user.get("roller_turbo_threshold", 30),
             "roller_rest_threshold": user.get("roller_rest_threshold", 20),
-            "roller_rest_duration": user.get("roller_rest_duration", 10)
+            "roller_rest_duration": user.get("roller_rest_duration", 10),
+            "roller_click_min": user.get("roller_click_min", 1.5),
+            "roller_click_max": user.get("roller_click_max", 3.5),
+            "roller_turbo_factor": user.get("roller_turbo_factor", 0.1)
         })
+
     return jsonify({"success": False}), 404
 
 

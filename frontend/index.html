@@ -357,6 +357,25 @@
                                     <input type="number" v-model="user.chainer_rest_duration" class="input-premium">
                                 </div>
                             </div>
+
+                            <div class="setting-row" style="margin-top:15px;">
+                                <div class="setting-item-input">
+                                    <label>Click Min (seg)</label>
+                                    <input type="number" step="0.1" v-model="user.chainer_click_min" class="input-premium">
+                                </div>
+                                <div class="setting-item-input">
+                                    <label>Click Max (seg)</label>
+                                    <input type="number" step="0.1" v-model="user.chainer_click_max" class="input-premium">
+                                </div>
+                            </div>
+                            
+                            <div class="setting-row" style="margin-top:15px;">
+                                <div class="setting-item-input">
+                                    <label>Factor Turbo (ej: 0.1)</label>
+                                    <input type="number" step="0.01" v-model="user.chainer_turbo_factor" class="input-premium" style="width:100%;">
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -387,6 +406,25 @@
                                     <input type="number" v-model="user.roller_rest_duration" class="input-premium">
                                 </div>
                             </div>
+
+                            <div class="setting-row" style="margin-top:15px;">
+                                <div class="setting-item-input">
+                                    <label>Click Min (seg)</label>
+                                    <input type="number" step="0.1" v-model="user.roller_click_min" class="input-premium">
+                                </div>
+                                <div class="setting-item-input">
+                                    <label>Click Max (seg)</label>
+                                    <input type="number" step="0.1" v-model="user.roller_click_max" class="input-premium">
+                                </div>
+                            </div>
+                            
+                            <div class="setting-row" style="margin-top:15px;">
+                                <div class="setting-item-input">
+                                    <label>Factor Turbo (ej: 0.1)</label>
+                                    <input type="number" step="0.01" v-model="user.roller_turbo_factor" class="input-premium" style="width:100%;">
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 

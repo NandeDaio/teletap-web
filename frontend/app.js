@@ -273,10 +273,17 @@ createApp({
                         chainer_turbo_threshold: this.user.chainer_turbo_threshold,
                         chainer_rest_threshold: this.user.chainer_rest_threshold,
                         chainer_rest_duration: this.user.chainer_rest_duration,
+                        chainer_click_min: this.user.chainer_click_min,
+                        chainer_click_max: this.user.chainer_click_max,
+                        chainer_turbo_factor: this.user.chainer_turbo_factor,
                         roller_turbo_threshold: this.user.roller_turbo_threshold,
                         roller_rest_threshold: this.user.roller_rest_threshold,
-                        roller_rest_duration: this.user.roller_rest_duration
+                        roller_rest_duration: this.user.roller_rest_duration,
+                        roller_click_min: this.user.roller_click_min,
+                        roller_click_max: this.user.roller_click_max,
+                        roller_turbo_factor: this.user.roller_turbo_factor
                     })
+
                 });
                 const data = await res.json();
                 if (data.success) {

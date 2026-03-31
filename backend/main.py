@@ -153,16 +153,13 @@ def parse_recharge_time(date_val):
         # Si es un timestamp numérico (ms o s)
         if isinstance(date_val, (int, float)):
             if date_val > 2000000000: date_val /= 1000 # de ms a s
-            diff = date_val - time.time()
-            return int(max(0, diff))
+            return int(date_val)
             
         # Si es un string ISO
         if isinstance(date_val, str):
             clean_date = date_val.replace("Z", "+00:00")
             target = datetime.fromisoformat(clean_date)
-            now = datetime.now(timezone.utc)
-            diff = (target - now).total_seconds()
-            return int(max(0, diff))
+            return int(target.timestamp())
     except:
         pass
     return 0
@@ -184,7 +181,7 @@ def chainer_sync_loop(email, headers, profile_url, balance_url):
                     "chainer_max_energy": int(val_total),
                     "chainer_energy_per_tap": int(source.get("energyPerTap") or 1),
                     # chainer_recharges se maneja internamente por sesión ahora
-                    "chainer_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeEnergyAt") or source.get("rechargeAt"))),
+                    "chainer_recharge_at": parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeEnergyAt") or source.get("rechargeAt")),
                     "chainer_level": (lambda val: int(str(val).replace("level", "")) if val else 1)(
                                         source.get("profileProgressionsCode") or p_data.get("profileProgressionsCode") or 
                                         p_data.get("userData", {}).get("profileProgressionsCode") or
@@ -340,7 +337,7 @@ def roller_sync_loop(email, headers, profile_url, balance_url):
                     "roller_max_energy": int(val_total),
                     "roller_energy_per_tap": int(source.get("energyPerTap") or 1),
                     "roller_recharges": int(local_cache.get(email, {}).get("roller_recharges", 0)), # roller_recharges se maneja internamente por sesión ahora
-                    "roller_recharge_at": int(time.time() + parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeAt") or source.get("next_recharge_at"))),
+                    "roller_recharge_at": parse_recharge_time(source.get("nextEnergyRechargeDate") or source.get("rechargeAt") or source.get("next_recharge_at")),
                     "roller_level_progress": source.get("levelProgress", 0),
                     "roller_rest_until": int(local_cache.get(email, {}).get("roller_rest_until", 0))
                 }

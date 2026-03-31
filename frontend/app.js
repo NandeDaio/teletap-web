@@ -100,11 +100,12 @@ createApp({
 
             const now = Date.now();
             // Priorizar el tiempo restante si existe una fecha de próxima recarga en el futuro
-            if (rechargeAt && (rechargeAt * 1000) > now) {
+            if (rechargeAt && (rechargeAt * 1000) > (now - 5000)) {
                 const diff = Math.ceil((rechargeAt * 1000 - now) / 1000);
-                return this.formatTime(diff);
+                if (diff > 0) return this.formatTime(diff);
+                return 'Recarga Lista!';
             }
-
+            
             if (recharges > 0) return 'Recarga Lista!';
             return 'Agotado';
         },

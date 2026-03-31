@@ -11,6 +11,7 @@ createApp({
                 : 'https://teletap-backend.onrender.com/api', // URL prospectiva en Render
 
             showCryptoModal: false,
+            currentView: 'dashboard',
             selectedPlan: '',
             selectedPlanName: '',
             selectedAmount: 0,

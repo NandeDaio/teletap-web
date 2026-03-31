@@ -600,7 +600,7 @@ def update_settings():
 @app.route("/api/status", methods=["GET"])
 def get_user_status():
     email = request.args.get("email")
-    user = local_cache.get(email) or sync_from_db(email)
+    user = sync_from_db(email)
     if user:
         return jsonify({
             "success": True,

@@ -38,8 +38,14 @@ def sync_from_db(email):
     try:
         res = supabase.table("users").select("*").eq("email", email).execute()
         if res.data:
-            local_cache[email] = res.data[0]
+            db_data = res.data[0]
+            if email in local_cache:
+                # Combinar para no perder ajustes en memoria si las columnas DB faltan
+                local_cache[email].update(db_data)
+            else:
+                local_cache[email] = db_data
             return local_cache[email]
+
     except Exception as e:
         print(f"Error syncing from DB: {e}")
     return local_cache.get(email)
@@ -57,9 +63,12 @@ def save_to_db(email, data, force=True):
 
     # 3. Guardar en Supabase
     try:
-        supabase.table("users").update(data).eq("email", email).execute()
+        res = supabase.table("users").update(data).eq("email", email).execute()
+        if not res.data:
+            print(f"⚠️ AVISO: El guardado en Supabase para {email} no devolvió datos. ¿Faltan columnas?")
     except Exception as e:
-        print(f"Error saving to DB: {e}")
+        print(f"❌ Error crítico guardando en Supabase: {e}")
+
 
 
 def log_message(email, bot_type, message):

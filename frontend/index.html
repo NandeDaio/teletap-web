@@ -139,7 +139,7 @@
 
                             <div class="bot-footer">
                                 <transition-group name="log-list" tag="div" class="logs-container">
-                                    <div v-for="log in (user.chainer_logs ? [...user.chainer_logs].reverse().slice(0, 20) : [])" :key="log" class="log-entry">
+                                    <div v-for="(log, index) in (user.chainer_logs ? [...user.chainer_logs].reverse() : [])" :key="index" class="log-entry">
                                         {{ log }}
                                     </div>
                                 </transition-group>
@@ -217,7 +217,7 @@
 
                             <div class="bot-footer">
                                 <transition-group name="log-list" tag="div" class="logs-container">
-                                    <div v-for="log in (user.roller_logs ? [...user.roller_logs].reverse().slice(0, 20) : [])" :key="log" class="log-entry">
+                                    <div v-for="(log, index) in (user.roller_logs ? [...user.roller_logs].reverse() : [])" :key="index" class="log-entry">
                                         {{ log }}
                                     </div>
                                 </transition-group>

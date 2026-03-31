@@ -217,8 +217,9 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
             if time.time() < rest_until:
                 time.sleep(5); continue
 
-            # Verificar si energía está baja
-            if curr_energy < 20:
+            # 1. Verificar si energía está baja (Umbral configurable)
+            rest_threshold = int(user.get("chainer_rest_threshold", 20))
+            if curr_energy < rest_threshold:
                 # PRIORIDAD: Antes de descansar, verificar si hay recarga disponible (Sincronizar para estar seguros)
                 user = sync_from_db(email)
                 recharge_at = int(user.get("chainer_recharge_at", 0))
@@ -238,11 +239,12 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
                         time.sleep(30)
                     continue
                 
-                # Si no hay recargos, ahora sí descansar
+                # Si no hay recargos, ahora sí descansar (Tiempo configurable)
                 if time.time() > rest_until:
-                    target_rest = int(time.time() + 600)
+                    rest_min = int(user.get("chainer_rest_duration", 10))
+                    target_rest = int(time.time() + (rest_min * 60))
                     save_to_db(email, {"chainer_rest_until": target_rest})
-                    log_message(email, "chainer", "💤 Energía baja. Descansando 10 min...")
+                    log_message(email, "chainer", f"💤 Energía baja. Descansando {rest_min} min...")
                     time.sleep(5); continue
 
             
@@ -255,10 +257,11 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
 
             # 2. Taps asíncronos
             if curr_energy >= energy_per_tap:
+                turbo_threshold_pct = int(user.get("chainer_turbo_threshold", 30)) / 100.0
                 resp = requests.post(collect_url, json={"tapsCount": energy_per_tap}, headers=headers, timeout=10)
                 if resp.status_code == 200:
                     new_energy = max(0, curr_energy - energy_per_tap)
-                    is_turbo = curr_energy > (total_energy * 0.3) if total_energy > 0 else False
+                    is_turbo = curr_energy > (total_energy * turbo_threshold_pct) if total_energy > 0 else False
                     
                     # Throttling inteligente: Guardar en DB solo cada 5 segundos si está en Turbo
                     last_save = user.get("last_db_save_chainer", 0)
@@ -270,8 +273,9 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
                     log_message(email, "chainer", f"{'🚀 [TURBO]' if is_turbo else '✅'} Taps enviados ({energy_per_tap})")
                 
                 wait = random.uniform(1.5, 3.5)
-                if total_energy > 0 and curr_energy > (total_energy * 0.3): wait *= 0.1
+                if total_energy > 0 and curr_energy > (total_energy * turbo_threshold_pct): wait *= 0.1
                 time.sleep(wait)
+
             else:
                 time.sleep(2)
         except Exception as e:
@@ -365,7 +369,8 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
             if time.time() < rest_until:
                 time.sleep(5); continue
 
-            if curr_energy < 20:
+            rest_threshold = int(user.get("roller_rest_threshold", 20))
+            if curr_energy < rest_threshold:
                 # PRIORIDAD: Antes de descansar, verificar si hay recarga disponible
                 user = sync_from_db(email)
                 recharge_at = int(user.get("roller_recharge_at", 0))
@@ -385,17 +390,19 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
                     continue
                 
                 if time.time() > rest_until:
-                    target_rest = int(time.time() + 600)
+                    rest_min = int(user.get("roller_rest_duration", 10))
+                    target_rest = int(time.time() + (rest_min * 60))
                     save_to_db(email, {"roller_rest_until": target_rest})
-                    log_message(email, "roller", "💤 Energía baja. Descansando 10 min...")
+                    log_message(email, "roller", f"💤 Energía baja. Descansando {rest_min} min...")
                     time.sleep(5); continue
 
 
             if curr_energy >= energy_per_tap:
+                turbo_threshold_pct = int(user.get("roller_turbo_threshold", 30)) / 100.0
                 resp = requests.post(collect_url, json={"tapsCount": energy_per_tap}, headers=headers, timeout=10)
                 if resp.status_code == 200:
                     new_energy = max(0, curr_energy - energy_per_tap)
-                    is_turbo = curr_energy > (total_energy * 0.3) if total_energy > 0 else False
+                    is_turbo = curr_energy > (total_energy * turbo_threshold_pct) if total_energy > 0 else False
                     
                     # Throttling inteligente: Guardar en DB solo cada 5 segundos si está en Turbo
                     last_save = user.get("last_db_save_roller", 0)
@@ -407,8 +414,9 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
                     log_message(email, "roller", f"{'🚀 [TURBO]' if is_turbo else '✅'} Taps enviados ({energy_per_tap})")
                 
                 wait = random.uniform(1.5, 3.5)
-                if total_energy > 0 and curr_energy > (total_energy * 0.3): wait *= 0.1
+                if total_energy > 0 and curr_energy > (total_energy * turbo_threshold_pct): wait *= 0.1
                 time.sleep(wait)
+
             else:
                 time.sleep(2)
         except Exception as e:
@@ -463,9 +471,17 @@ def login():
                 "token_chainer": user["token_chainer"],
                 "token_roller": user["token_roller"],
                 "chainer_running": user["chainer_running"],
-                "roller_running": user["roller_running"]
+                "roller_running": user["roller_running"],
+                # Settings defaults if not present
+                "chainer_turbo_threshold": user.get("chainer_turbo_threshold", 30),
+                "chainer_rest_threshold": user.get("chainer_rest_threshold", 20),
+                "chainer_rest_duration": user.get("chainer_rest_duration", 10),
+                "roller_turbo_threshold": user.get("roller_turbo_threshold", 30),
+                "roller_rest_threshold": user.get("roller_rest_threshold", 20),
+                "roller_rest_duration": user.get("roller_rest_duration", 10)
             }
         })
+
     return jsonify({"success": False, "message": "Credenciales inválidas"}), 401
 
 @app.route('/api/update_token', methods=['POST'])
@@ -526,6 +542,32 @@ def toggle_bot():
         
     return jsonify({"success": True, "running": state_to_set})
 
+@app.route("/api/update_settings", methods=["POST"])
+def update_settings():
+    data = request.json
+    email = data.get("email")
+    user = local_cache.get(email)
+    if not user: return jsonify({"success": False}), 404
+    
+    # Lista de campos permitidos para actualizar
+    allowed_fields = [
+        "chainer_turbo_threshold", "chainer_rest_threshold", "chainer_rest_duration",
+        "roller_turbo_threshold", "roller_rest_threshold", "roller_rest_duration",
+        "password"
+    ]
+    
+    update_data = {}
+    for field in allowed_fields:
+        if field in data:
+            update_data[field] = data[field]
+            
+    if update_data:
+        save_to_db(email, update_data)
+        log_message(email, "chainer", "⚙️ Ajustes actualizados correctamente.")
+        return jsonify({"success": True, "message": "Ajustes guardados"})
+        
+    return jsonify({"success": False, "message": "No se enviaron datos válidos"}), 400
+
 @app.route("/api/status", methods=["GET"])
 def get_user_status():
     email = request.args.get("email")
@@ -558,9 +600,17 @@ def get_user_status():
             "chainer_level": user.get("chainer_level", 1),
             "roller_level": user.get("roller_level", 1),
             "chainer_boss_hp": user.get("chainer_boss_hp", 0),
-            "roller_boss_hp": user.get("roller_boss_hp", 0)
+            "roller_boss_hp": user.get("roller_boss_hp", 0),
+            # Nuevos campos de configuración
+            "chainer_turbo_threshold": user.get("chainer_turbo_threshold", 30),
+            "chainer_rest_threshold": user.get("chainer_rest_threshold", 20),
+            "chainer_rest_duration": user.get("chainer_rest_duration", 10),
+            "roller_turbo_threshold": user.get("roller_turbo_threshold", 30),
+            "roller_rest_threshold": user.get("roller_rest_threshold", 20),
+            "roller_rest_duration": user.get("roller_rest_duration", 10)
         })
     return jsonify({"success": False}), 404
+
 
 @app.route("/api/submit_payment", methods=["POST"])
 def submit_payment():

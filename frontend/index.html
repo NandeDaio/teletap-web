@@ -330,28 +330,73 @@
                         </form>
                     </div>
 
-                    <!-- NOTIFICATIONS/SYSTEM -->
-                    <div class="card glass">
+                    <!-- BOT PREFERENCES (NEW) -->
+                    <div class="card glass configuration-card">
                         <div class="card-header">
-                            <h3>Preferencias del Bot</h3>
+                            <h3><i data-lucide="zap" class="header-icon"></i> Configuración ChainerBot</h3>
                         </div>
                         <div class="settings-list">
-                            <div class="setting-item">
-                                <div class="setting-info" style="display:flex; flex-direction:column;">
-                                    <span class="title">Modo Silencioso</span>
-                                    <span class="desc" style="font-size:0.7rem; color:var(--text-muted)">No mostrar logs en tiempo real.</span>
+                            <div class="setting-group">
+                                <div class="setting-label">
+                                    <span class="title">Umbral Modo Turbo (%)</span>
+                                    <span class="desc">Activar turbo si la energía es mayor al {{ user.chainer_turbo_threshold }}%</span>
                                 </div>
-                                <input type="checkbox" style="width:20px; height:20px;">
+                                <div class="slider-container">
+                                    <input type="range" min="5" max="90" step="5" v-model="user.chainer_turbo_threshold" class="slider-premium">
+                                    <span class="slider-value">{{ user.chainer_turbo_threshold }}%</span>
+                                </div>
                             </div>
-                            <div class="setting-item" style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                                <div class="setting-info" style="display:flex; flex-direction:column;">
-                                    <span class="title">Turbo Global</span>
-                                    <span class="desc" style="font-size:0.7rem; color:var(--text-muted)">Forzar modo turbo en todos los bots.</span>
+                            
+                            <div class="setting-row">
+                                <div class="setting-item-input">
+                                    <label>Energía para Descanso</label>
+                                    <input type="number" v-model="user.chainer_rest_threshold" class="input-premium">
                                 </div>
-                                <input type="checkbox" checked style="width:20px; height:20px;">
+                                <div class="setting-item-input">
+                                    <label>Duración Descanso (min)</label>
+                                    <input type="number" v-model="user.chainer_rest_duration" class="input-premium">
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="card glass configuration-card">
+                        <div class="card-header">
+                            <h3><i data-lucide="gamepad-2" class="header-icon"></i> Configuración RollerBot</h3>
+                        </div>
+                        <div class="settings-list">
+                            <div class="setting-group">
+                                <div class="setting-label">
+                                    <span class="title">Umbral Modo Turbo (%)</span>
+                                    <span class="desc">Activar turbo si la energía es mayor al {{ user.roller_turbo_threshold }}%</span>
+                                </div>
+                                <div class="slider-container">
+                                    <input type="range" min="5" max="90" step="5" v-model="user.roller_turbo_threshold" class="slider-premium">
+                                    <span class="slider-value">{{ user.roller_turbo_threshold }}%</span>
+                                </div>
+
+                            </div>
+                            
+                            <div class="setting-row">
+                                <div class="setting-item-input">
+                                    <label>Energía para Descanso</label>
+                                    <input type="number" v-model="user.roller_rest_threshold" class="input-premium">
+                                </div>
+                                <div class="setting-item-input">
+                                    <label>Duración Descanso (min)</label>
+                                    <input type="number" v-model="user.roller_rest_duration" class="input-premium">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SAVE BUTTONS -->
+                    <div class="settings-actions">
+                        <button @click="updateSettings" class="btn-primary-large">
+                            <i data-lucide="save"></i> GUARDAR TODOS LOS AJUSTES
+                        </button>
+                    </div>
+
                 </div>
             </main>
 
@@ -397,7 +442,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- Toast Notification -->
+        <div class="toast-container" v-if="statusMsg.text">
+            <div class="toast show" :class="statusMsg.type">
+                <i :data-lucide="statusMsg.type === 'success' ? 'check-circle' : 'alert-circle'"></i>
+                <span>{{ statusMsg.text }}</span>
+            </div>
+        </div>
     </div>
+
 
     <!-- Vue.js para simplificar reactividad sin build tools -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>

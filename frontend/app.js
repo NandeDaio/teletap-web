@@ -14,12 +14,11 @@ createApp({
             selectedPlan: '',
             selectedPlanName: '',
             selectedAmount: 0,
-            txid: '',
-            walletAddr: 'COLOCAR_TU_BILLETERA_AQUI',
-            currentView: 'dashboard',
-            pollingInterval: null
+            pollingInterval: null,
+            statusMsg: { text: '', type: '' }
         }
     },
+
     mounted() {
         this.initIcons();
         // Forzar actualización de la UI cada segundo para los relojes de uptime y descanso
@@ -253,6 +252,43 @@ createApp({
             } catch (err) {
                 console.error("Error submitting payment:", err);
             }
+        },
+
+        showStatus(text, type = 'success') {
+            this.statusMsg = { text, type };
+            this.initIcons();
+            setTimeout(() => {
+                this.statusMsg.text = '';
+            }, 3000);
+        },
+
+
+        async updateSettings() {
+            try {
+                const res = await fetch(`${this.apiBase}/update_settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: this.user.email,
+                        chainer_turbo_threshold: this.user.chainer_turbo_threshold,
+                        chainer_rest_threshold: this.user.chainer_rest_threshold,
+                        chainer_rest_duration: this.user.chainer_rest_duration,
+                        roller_turbo_threshold: this.user.roller_turbo_threshold,
+                        roller_rest_threshold: this.user.roller_rest_threshold,
+                        roller_rest_duration: this.user.roller_rest_duration
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showStatus("¡Configuración guardada!", 'success');
+                } else {
+                    this.showStatus("Error: " + data.message, 'error');
+                }
+            } catch (err) {
+                this.showStatus("Error de conexión", 'error');
+            }
         }
+
     }
 }).mount('#app')
+

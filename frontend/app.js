@@ -166,11 +166,13 @@ createApp({
             if (this.currentView === 'settings') return;
 
             try {
-                const res = await fetch(`${this.apiBase}/status?email=${this.user.email}`);
+                // Agregar &t= timestamp previene que el navegador almacene en caché la respuesta y congele la UI
+                const res = await fetch(`${this.apiBase}/status?email=${this.user.email}&t=${Date.now()}`);
                 const data = await res.json();
                 if (data.success) {
-                    // Mezclar datos nuevos con los existentes para no perder el objeto user
-                    Object.assign(this.user, data);
+                    for (const key in data) {
+                        this.user[key] = data[key];
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching status", err);

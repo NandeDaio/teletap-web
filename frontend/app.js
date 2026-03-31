@@ -161,6 +161,9 @@ createApp({
 
         async fetchStatus() {
             if (!this.user || !this.user.email) return;
+            // No sobrescribir datos del usuario si está editando ajustes
+            if (this.currentView === 'settings') return;
+
             try {
                 const res = await fetch(`${this.apiBase}/status?email=${this.user.email}`);
                 const data = await res.json();
@@ -172,6 +175,7 @@ createApp({
                 console.error("Error fetching status", err);
             }
         },
+
 
         startPolling() {
             if (this.pollingInterval) clearInterval(this.pollingInterval);

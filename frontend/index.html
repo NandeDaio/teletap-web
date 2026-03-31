@@ -311,35 +311,36 @@
                     </div>
                 </header>
 
-                <div class="grid settings-grid">
+                <div class="settings-grid">
+
                     <!-- CHANGE PASSWORD -->
-                    <div class="card glass">
+                    <div class="card glass settings-card">
                         <div class="card-header">
-                            <h3>Seguridad de la Cuenta</h3>
+                            <h3><i data-lucide="shield-check" class="header-icon"></i> Seguridad</h3>
                         </div>
-                        <form @submit.prevent="alert('Contraseña actualizada (Simulación)')">
+                        <form @submit.prevent="alert('Contraseña actualizada (Simulación)')" class="settings-form">
                             <div class="input-group">
                                 <label>Nueva Contraseña</label>
-                                <input type="password" placeholder="••••••••">
+                                <input type="password" placeholder="••••••••" class="input-premium">
                             </div>
                             <div class="input-group">
                                 <label>Confirmar Contraseña</label>
-                                <input type="password" placeholder="••••••••">
+                                <input type="password" placeholder="••••••••" class="input-premium">
                             </div>
-                            <button type="submit" class="btn-primary">Actualizar Contraseña</button>
+                            <button type="submit" class="btn-primary" style="margin-top:10px;">Actualizar Contraseña</button>
                         </form>
                     </div>
 
-                    <!-- BOT PREFERENCES (NEW) -->
-                    <div class="card glass configuration-card">
+                    <!-- BOT CONFIGURATION: CHAINER -->
+                    <div class="card glass settings-card">
                         <div class="card-header">
-                            <h3><i data-lucide="zap" class="header-icon"></i> Configuración ChainerBot</h3>
+                            <h3><i data-lucide="zap" class="header-icon"></i> ChainerBot</h3>
                         </div>
                         <div class="settings-list">
                             <div class="setting-group">
                                 <div class="setting-label">
                                     <span class="title">Umbral Modo Turbo (%)</span>
-                                    <span class="desc">Activar turbo si la energía es mayor al {{ user.chainer_turbo_threshold }}%</span>
+                                    <span class="desc">Activar turbo al superar el {{ user.chainer_turbo_threshold }}% de energía</span>
                                 </div>
                                 <div class="slider-container">
                                     <input type="range" min="5" max="90" step="5" v-model="user.chainer_turbo_threshold" class="slider-premium">
@@ -349,16 +350,16 @@
                             
                             <div class="setting-row">
                                 <div class="setting-item-input">
-                                    <label>Energía para Descanso</label>
+                                    <label>Energía Descanso</label>
                                     <input type="number" v-model="user.chainer_rest_threshold" class="input-premium">
                                 </div>
                                 <div class="setting-item-input">
-                                    <label>Duración Descanso (min)</label>
+                                    <label>Duración (min)</label>
                                     <input type="number" v-model="user.chainer_rest_duration" class="input-premium">
                                 </div>
                             </div>
 
-                            <div class="setting-row" style="margin-top:15px;">
+                            <div class="setting-row">
                                 <div class="setting-item-input">
                                     <label>Click Min (seg)</label>
                                     <input type="number" step="0.1" v-model="user.chainer_click_min" class="input-premium">
@@ -369,45 +370,44 @@
                                 </div>
                             </div>
                             
-                            <div class="setting-row" style="margin-top:15px;">
+                            <div class="setting-row" style="grid-template-columns: 1fr;">
                                 <div class="setting-item-input">
-                                    <label>Factor Turbo (ej: 0.1)</label>
-                                    <input type="number" step="0.01" v-model="user.chainer_turbo_factor" class="input-premium" style="width:100%;">
+                                    <label>Factor de Velocidad Turbo (Ej: 0.1)</label>
+                                    <input type="number" step="0.01" v-model="user.chainer_turbo_factor" class="input-premium">
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
-                    <div class="card glass configuration-card">
+                    <!-- BOT CONFIGURATION: ROLLER -->
+                    <div class="card glass settings-card">
                         <div class="card-header">
-                            <h3><i data-lucide="gamepad-2" class="header-icon"></i> Configuración RollerBot</h3>
+                            <h3><i data-lucide="gamepad-2" class="header-icon"></i> RollerBot</h3>
                         </div>
                         <div class="settings-list">
                             <div class="setting-group">
                                 <div class="setting-label">
                                     <span class="title">Umbral Modo Turbo (%)</span>
-                                    <span class="desc">Activar turbo si la energía es mayor al {{ user.roller_turbo_threshold }}%</span>
+                                    <span class="desc">Activar turbo al superar el {{ user.roller_turbo_threshold }}% de energía</span>
                                 </div>
                                 <div class="slider-container">
                                     <input type="range" min="5" max="90" step="5" v-model="user.roller_turbo_threshold" class="slider-premium">
                                     <span class="slider-value">{{ user.roller_turbo_threshold }}%</span>
                                 </div>
-
                             </div>
                             
                             <div class="setting-row">
                                 <div class="setting-item-input">
-                                    <label>Energía para Descanso</label>
+                                    <label>Energía Descanso</label>
                                     <input type="number" v-model="user.roller_rest_threshold" class="input-premium">
                                 </div>
                                 <div class="setting-item-input">
-                                    <label>Duración Descanso (min)</label>
+                                    <label>Duración (min)</label>
                                     <input type="number" v-model="user.roller_rest_duration" class="input-premium">
                                 </div>
                             </div>
 
-                            <div class="setting-row" style="margin-top:15px;">
+                            <div class="setting-row">
                                 <div class="setting-item-input">
                                     <label>Click Min (seg)</label>
                                     <input type="number" step="0.1" v-model="user.roller_click_min" class="input-premium">
@@ -418,25 +418,25 @@
                                 </div>
                             </div>
                             
-                            <div class="setting-row" style="margin-top:15px;">
+                            <div class="setting-row" style="grid-template-columns: 1fr;">
                                 <div class="setting-item-input">
-                                    <label>Factor Turbo (ej: 0.1)</label>
-                                    <input type="number" step="0.01" v-model="user.roller_turbo_factor" class="input-premium" style="width:100%;">
+                                    <label>Factor de Velocidad Turbo (Ej: 0.1)</label>
+                                    <input type="number" step="0.01" v-model="user.roller_turbo_factor" class="input-premium">
                                 </div>
                             </div>
-
                         </div>
                     </div>
+                </div>
 
-                    <!-- SAVE BUTTONS -->
-                    <div class="settings-actions">
-                        <button @click="updateSettings" class="btn-primary-large">
-                            <i data-lucide="save"></i> GUARDAR TODOS LOS AJUSTES
-                        </button>
-                    </div>
-
+                <!-- GLOBAL ACTIONS -->
+                <div class="settings-footer">
+                    <button @click="updateSettings" class="btn-primary-large">
+                        <i data-lucide="save"></i> GUARDAR TODOS LOS AJUSTES
+                    </button>
+                </div>
                 </div>
             </main>
+
 
             <!-- CRYPTO MODAL -->
             <div v-if="showCryptoModal" class="modal-overlay">

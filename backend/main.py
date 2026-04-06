@@ -277,6 +277,13 @@ def chainer_tap_loop(email, headers, collect_url, recharge_url):
                     if should_save_db: user["last_db_save_chainer"] = time.time()
                     
                     log_message(email, "chainer", f"{'🚀 [TURBO]' if is_turbo else '✅'} Taps enviados ({energy_per_tap})")
+
+                    # Sincronización automática al derrotar boss
+                    curr_hp = user.get("chainer_boss_hp", 0)
+                    if curr_hp <= 0:
+                        log_message(email, "chainer", "⚔️ Boss derrotado. Sincronizando nuevo nivel...")
+                        sync_from_db(email)
+
                 
                 click_min = float(user.get("chainer_click_min", 1.5))
                 click_max = float(user.get("chainer_click_max", 3.5))
@@ -423,6 +430,14 @@ def roller_tap_loop(email, headers, collect_url, recharge_url):
                     if should_save_db: user["last_db_save_roller"] = time.time()
                     
                     log_message(email, "roller", f"{'🚀 [TURBO]' if is_turbo else '✅'} Taps enviados ({energy_per_tap})")
+
+                    # Sincronización automática al subir de nivel (meta alcanzada)
+                    prog = user.get("roller_level_progress", 0)
+                    target = user.get("roller_level_required", 0)
+                    if isinstance(prog, (int, float)) and isinstance(target, (int, float)) and prog >= target and target > 0:
+                        log_message(email, "roller", "⭐ Meta alcanzada. Sincronizando nuevo nivel...")
+                        sync_from_db(email)
+
                 
                 click_min = float(user.get("roller_click_min", 1.5))
                 click_max = float(user.get("roller_click_max", 3.5))
